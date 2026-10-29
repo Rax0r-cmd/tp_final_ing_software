@@ -3,4 +3,4 @@
 3|28999888|Martin|Rodriguez|1199887766|MN-38902|Traumatologia|1
 4|35666777|Sofia|Alvarez|1155667788|MN-61044|Dermatologia|1
 5|27333444|Mariano|Benitez|1122334455|MN-34190|Neurologia|0
-
+6|36780933|Jonathan Tullo|Tullo|2234388758|121212|Clinico|1

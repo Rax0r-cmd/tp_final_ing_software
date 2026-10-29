@@ -70,8 +70,15 @@ classDiagram
         -insertarRec() void
         -inordenRec() void
         -destruirRec() void
+        -preordenGuardarRec() void
+        -preordenCargarRec() void
+        -mostrarGraficoRec() void
+        -calcularAlturaRec() int
         +insertar(T) void
         +obtenerInorden() vector~T~
+        +imprimirGrafico() void
+        +guardarEstructura(string) void
+        +cargarEstructura(string) void
     }
 
     class GestorArchivos~T~ {
@@ -83,79 +90,57 @@ classDiagram
     Persona <|-- Paciente
     Turno --> Medico : asocia por id
     Turno --> Paciente : asocia por id
-    ArbolABB ..> Turno : almacena y ordena
+    ArbolABB ..> Turno : indexa, ordena y persiste
 ```
 
 ---
 
-## 3. Decisiones de Diseño y Requisitos Cumplidos
+## 3. Requisitos Cumplidos (Obligatorios y Opcionales)
 
-### A. Programación Orientada a Objetos (POO)
-* **Abstracción y Herencia:** Se modeló la clase base abstracta `Persona` para encapsular datos personales (`id`, `dni`, `nombre`, `apellido`, `telefono`, `activo`). Define el método virtual puro `virtual void mostrarDatos() const = 0`, obligando a que `Medico` y `Paciente` implementen su propio comportamiento polimórfico.
-* **Miembros Estáticos:** Se incorporó `static int totalPersonas` en `Persona`, que rastrea en tiempo de compilación y ejecución la cantidad de personas activas en memoria, incluyendo un constructor de copia que mantiene la cuenta exacta frente a realocaciones de vectores.
-* **Sobrecarga de Operadores:**
-  * `operator==`: Detecta colisiones de turno si dos objetos coinciden en médico, fecha y hora (evitando turnos superpuestos), o si coinciden en ID.
-  * `operator<`: Compara turnos de manera cronológica (`AAAAMMDD_HHMM_ID`), permitiendo que el árbol binario los ordene automáticamente en orden temporal.
-  * `operator<<`: Sobrecarga del operador de inserción de flujo para imprimir resúmenes de turnos de manera limpia.
-* **Función Friend Justificada:** La función `generarComprobanteTurno(const Turno&, const Medico&, const Paciente&)` fue declarada como `friend` en las tres clases. Esto permite emitir un ticket oficial de admisión accediendo directamente a los atributos protegidos y privados de cada una de ellas sin necesidad de romper el encapsulamiento global exponiendo getters innecesarios.
+### A. Requisitos Obligatorios
+1. **POO y Encapsulamiento:** Clase base abstracta `Persona` (`virtual void mostrarDatos() const = 0`), clases derivadas `Medico` y `Paciente`, y clase de relación `Turno`. Constructores por defecto, parametrizados y destructor virtual.
+2. **Miembros Estáticos:** Atributo `static int totalPersonas` con constructor de copia para seguimiento en tiempo de compilación y ejecución.
+3. **Sobrecarga de Operadores:** `operator==` (detección de colisiones de turno y coincidencias de ID), `operator<` (criterio cronológico para el ABB) y `operator<<` (salida a consola).
+4. **Función Friend Justificada:** `generarComprobanteTurno` con acceso directo a atributos privados y protegidos de `Turno`, `Medico` y `Paciente` para emitir el ticket formal sin violar el encapsulamiento general.
+5. **Persistencia en Archivos:** `medicos.txt`, `pacientes.txt` y `turnos.txt` en la carpeta `data/`.
+6. **ABML/CRUD Completo:** Alta, baja lógica (`activo = false`), modificación, listado y búsqueda.
+7. **Reglas de Negocio:** Validación estricta contra turnos duplicados a la misma fecha y hora para el mismo profesional o paciente, prohibición de turnos a entidades inactivas, cancelación y reprogramación.
+8. **Templates:** `ArbolABB<T>` como estructura de datos y `GestorArchivos<T>` como manejador genérico de persistencia.
+9. **Excepciones Propias:** Jerarquía basada en `std::exception` (`TurnoOcupadoException`, `EntidadNoEncontradaException`, `DatoInvalidoException`, `ArchivoException`, `ReglaNegocioException`).
+10. **Estructura de Datos Propia:** `ArbolABB<T>` (Árbol Binario de Búsqueda) implementado desde cero con punteros y memoria dinámica en el heap.
+11. **Validación de Entradas:** Manejo robusto de errores con `cin.fail()`, control de días bisiestos y rangos horarios.
+12. **Organización:** Modularizado en `.h` y `.cpp` con comentarios explicativos naturales.
 
-### B. Estructura de Datos Propia y Recursión
-* Se implementó desde cero la clase template `ArbolABB<T>` (Árbol Binario de Búsqueda) utilizando nodos dinámicos con punteros a izquierda y derecha.
-* **Recursión aplicada:**
-  * Inserción recursiva (`insertarRec`) respetando la propiedad de orden del ABB.
-  * Recorrido Inorden recursivo (`inordenRec`), que al utilizar `operator<` devuelve los turnos en estricto orden cronológico ascendente.
-  * Destrucción recursiva en postorden (`destruirRec`) en el destructor para liberar de forma limpia toda la memoria del heap sin memory leaks.
-
-### C. Templates (Plantillas)
-* `ArbolABB<T>`: Contenedor genérico propio reutilizable para cualquier tipo de dato.
-* `GestorArchivos<T>`: Clase template encargada de la persistencia que lee y escribe vectores de cualquier entidad que implemente `toLineaArchivo()` y `fromLineaArchivo()`.
-
-### D. Persistencia en Archivos
-* Los datos se almacenan en texto estructurado en el directorio `data/`:
-  * `medicos.txt`
-  * `pacientes.txt`
-  * `turnos.txt`
-* Se cargan automáticamente al iniciar el programa y se actualizan al realizar operaciones o al salir.
-
-### E. Reglas de Negocio y Baja Lógica
-* **Validación de duplicados y solapamientos:** No se permite asignar turnos si el profesional o el paciente ya poseen otro turno no cancelado en la misma fecha y hora.
-* **Verificación de entidades:** Se verifica que tanto el médico como el paciente existan y estén activos antes de dar un turno.
-* **Baja lógica:** Se implementó mediante el atributo `activo` en `Persona`. Si un médico o paciente es dado de baja lógica, no puede recibir turnos nuevos, pero sus turnos e historial pasado no se rompen ni se eliminan físicamente de la base.
-* **Cancelación y Reprogramación:** Se permite cancelar turnos (cambio de estado a `CANCELADO`) y reprogramarlos verificando que el nuevo horario esté libre.
-
-### F. Manejo de Excepciones Propias
-Se diseñó una jerarquía basada en `std::exception`:
-* `ClinicaException`: Clase base.
-* `TurnoOcupadoException`: Lanzada ante solapamientos de horario.
-* `EntidadNoEncontradaException`: Lanzada cuando se busca un ID o DNI inexistente.
-* `DatoInvalidoException`: Para datos fuera de formato.
-* `ArchivoException`: Errores de lectura/escritura de persistencia.
-* `ReglaNegocioException`: Lanzada ante intentos de operar sobre entidades inactivas o estados incompatibles.
-
-### G. Validación de Entradas
-El módulo `Validaciones` previene caídas del sistema:
-* Limpieza del buffer `std::cin` ante letras en campos numéricos (`cin.fail()`).
-* Verificación de fechas reales (año bisiesto, cantidad de días por mes, formato `DD/MM/AAAA`).
-* Verificación de rango horario permitido (08:00 a 20:00 hs).
-* Validación de cadenas no vacías y DNIs numéricos.
+### B. Requisitos Opcionales (Suman a la nota)
+* **Cada entidad como librería importada al programa principal:** Las entidades (`Persona`, `Medico`, `Paciente`, `Turno`) se compilan en la librería estática `lib/libentidades.a` y se enlazan al ejecutable principal mediante `-Llib -lentidades`.
+* **Interfaz de consola cuidada:** Implementación de secuencias ANSI con `Colores.h` (títulos en cian brillante, estados en verde/amarillo/rojo, tablas alineadas con `iomanip` y limpieza de pantalla).
+* **Recursión aplicada de forma justificada:** 
+  * Recorrido Inorden recursivo para listado cronológico.
+  * Recorrido Preorden recursivo para serialización del árbol.
+  * Visualización gráfica del árbol por niveles en consola.
+  * Cálculo recursivo de la altura del árbol.
+  * Destrucción recursiva en postorden para liberar memoria.
+* **Reportes:** Turnos por fecha, turnos por médico, historial por paciente y estadísticas generales con cálculo de tasas efectivas y opción de exportación a archivos de texto.
+* **Persistencia de la estructura de datos:** El árbol binario preserva su topología exacta directamente en el archivo binario/texto `data/arbol_turnos.dat`.
 
 ---
 
-## 4. Estructura del Código
+## 4. Estructura de Archivos
 
 ```text
 TP_Final_Ing_software/
 ├── include/
-│   ├── ArbolABB.h              <- Template de Árbol Binario de Búsqueda (Recursivo)
-│   ├── ClinicaServicio.h       <- Capa de servicios y reglas de negocio
-│   ├── Excepciones.h           <- Jerarquía de excepciones personalizadas
+│   ├── ArbolABB.h              <- Template de Árbol Binario de Búsqueda con Recursión y Persistencia
+│   ├── ClinicaServicio.h       <- Lógica de negocio y reglas del consultorio
+│   ├── Colores.h               <- Paleta ANSI y utilidades de consola
+│   ├── Excepciones.h           <- Excepciones personalizadas derivadas de std::exception
 │   ├── GestorArchivos.h        <- Template para persistencia en archivos
-│   ├── InterfazUI.h            <- Menúes y vistas por consola
+│   ├── InterfazUI.h            <- Menúes y pantallas visuales
 │   ├── Medico.h                <- Entidad derivada de Persona
 │   ├── Paciente.h              <- Entidad derivada de Persona
-│   ├── Persona.h               <- Clase base abstracta
+│   ├── Persona.h               <- Clase base abstracta con miembro estático
 │   ├── Turno.h                 <- Entidad relación, sobrecarga de operadores y friend
-│   └── Validaciones.h          <- Funciones robustas de entrada por consola
+│   └── Validaciones.h          <- Funciones robustas de entrada y validación
 ├── src/
 │   ├── ClinicaServicio.cpp
 │   ├── InterfazUI.cpp
@@ -166,51 +151,34 @@ TP_Final_Ing_software/
 │   ├── Turno.cpp
 │   └── Validaciones.cpp
 ├── data/
+│   ├── arbol_turnos.dat        <- Persistencia directa de la estructura del árbol
 │   ├── medicos.txt             <- Datos de prueba iniciales
 │   ├── pacientes.txt           <- Datos de prueba iniciales
 │   └── turnos.txt              <- Datos de prueba iniciales
-├── compilar.bat                <- Script de compilación rápida para Windows
-├── Makefile                    <- Makefile para MinGW / Linux
+├── lib/
+│   └── libentidades.a          <- Librería estática de entidades compilada
+├── CMakeLists.txt              <- Configuración para Visual Studio / CMake
+├── compilar.bat                <- Script de compilación automática con librería
+├── Makefile                    <- Makefile estándar para MinGW / Linux
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 5. Instrucciones de Compilación y Ejecución
+## 5. Compilación y Ejecución
 
-### En Windows (con MinGW / g++ instalado):
-Simplemente hacer doble clic en `compilar.bat` o ejecutar desde la consola:
-```bash
+### Opción 1: En Windows con script automático:
+```powershell
 .\compilar.bat
 ```
+*(Compila las entidades en `lib/libentidades.a`, vincula el programa y lo ejecuta)*.
 
-### Compilación manual con g++:
-```bash
-g++ -std=c++17 -Wall -Wextra -Iinclude src/*.cpp -o sistema_turnos.exe
-.\sistema_turnos.exe
-```
-
-### Con Make:
+### Opción 2: Con Makefile:
 ```bash
 make
 .\sistema_turnos.exe
 ```
 
----
-
-## 6. Guía para la Defensa Oral del Final
-
-Durante la mesa de examen, los docentes evalúan el dominio de los conceptos y suelen solicitar una **modificación pequeña en vivo**. A continuación se detallan los puntos clave y cómo responder:
-
-1. **¿Dónde está la función friend y por qué está justificada?**
-   * Está en `Turno.h` (`generarComprobanteTurno`). Permite generar el ticket médico accediendo a campos privados de `Turno`, `Medico` y `Paciente` sin tener que abrir getters públicos que violen la encapsulación para el resto de la aplicación.
-2. **¿Por qué `Persona` es abstracta?**
-   * Porque tiene el método virtual puro `virtual void mostrarDatos() const = 0`. No se pueden crear objetos `Persona` genéricos, solo `Medico` o `Paciente`.
-3. **¿Cómo funciona la estructura de datos y la recursión?**
-   * Se utiliza `ArbolABB<Turno>`. La inserción y el recorrido inorden son funciones recursivas. Al recorrer en inorden, como los turnos sobrecargan el operador `<`, se visitan e imprimen automáticamente en orden cronológico.
-4. **Modificaciones típicas que pueden pedir en vivo:**
-   * *Agregar un campo nuevo a Médico (ej: honorarios/consulta o días de atención):* Agregar el atributo en `include/Medico.h`, inicializarlo en los constructores de `src/Medico.cpp`, agregarlo a `toLineaArchivo()` y `fromLineaArchivo()`, y actualizar la vista en `InterfazUI.cpp`.
-   * *Cambiar una regla de negocio (ej: permitir turnos hasta las 21:00 hs):* Ir a `src/Validaciones.cpp` en `leerHora` y cambiar el límite superior de `20` a `21`.
-   * *Lanzar una nueva excepción personalizada:* Definirla en `include/Excepciones.h` heredando de `ClinicaException` y atraparla en `InterfazUI.cpp`.
-
+### Opción 3: Con CMake / Visual Studio:
+Abrir la carpeta en Visual Studio 2022 y hacer clic en `▶ Iniciar`.

@@ -3,6 +3,8 @@
 *.o
 *.obj
 *.out
+*.a
+lib/
 
 # IDEs y editores
 .vscode/
@@ -13,4 +15,3 @@
 # Archivos de respaldo
 *.bak
 *~
-
