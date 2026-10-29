@@ -22,6 +22,7 @@ private:
     const std::string rutaMedicos = "data/medicos.txt";
     const std::string rutaPacientes = "data/pacientes.txt";
     const std::string rutaTurnos = "data/turnos.txt";
+    const std::string rutaArbol = "data/arbol_turnos.dat"; // Persistencia de la estructura de datos
 
     // Generadores de IDs correlativos
     int obtenerSiguienteIdMedico();
@@ -35,7 +36,7 @@ public:
     ClinicaServicio();
     ~ClinicaServicio();
 
-    // Carga inicial y guardado en archivos
+    // Carga inicial y guardado en archivos (incluye persistencia de la estructura de datos)
     void cargarDatos();
     void guardarDatos();
 
@@ -74,6 +75,10 @@ public:
     // Listado cronologico usando el ArbolABB implementado (Recorrido inorden recursivo)
     std::vector<Turno> obtenerTurnosCronologicos() const;
 
+    // Visualizacion del arbol (Recursion aplicada y visible)
+    void mostrarEstructuraArbol() const;
+    int getAlturaArbol() const;
+
     // Comprobante usando la funcion friend
     void imprimirTicket(int idTurno);
 
@@ -84,7 +89,9 @@ public:
 
     // Estadisticas de uso de la clinica
     void obtenerEstadisticas(int& totalTurnos, int& pendientes, int& atendidos, int& cancelados) const;
+
+    // Exportar cualquier reporte a un archivo de texto en disco
+    void exportarReporteTexto(const std::string& nombreArchivo, const std::string& contenido) const;
 };
 
 #endif // CLINICA_SERVICIO_H
-

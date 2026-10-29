@@ -3,26 +3,27 @@
 #include "../include/Excepciones.h"
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 ClinicaServicio::ClinicaServicio() {
     cargarDatos();
 }
 
 ClinicaServicio::~ClinicaServicio() {
-    // Al destruirse el servicio, nos aseguramos de persistir los cambios
     try {
         guardarDatos();
     } catch (...) {
-        // En destructores evitamos propagar excepciones para no generar terminate()
+        // Evitamos propagar excepciones en destructores
     }
 }
 
 void ClinicaServicio::sincronizarArbol() {
     arbolTurnos.vaciar();
     for (const auto& t : turnos) {
-        // Solo insertamos turnos en el arbol si tienen datos validos
         arbolTurnos.insertar(t);
     }
+    // Guardamos la estructura del arbol persistida en disco
+    arbolTurnos.guardarEstructura(rutaArbol);
 }
 
 void ClinicaServicio::cargarDatos() {
@@ -30,7 +31,16 @@ void ClinicaServicio::cargarDatos() {
         GestorArchivos<Medico>::cargar(rutaMedicos, medicos);
         GestorArchivos<Paciente>::cargar(rutaPacientes, pacientes);
         GestorArchivos<Turno>::cargar(rutaTurnos, turnos);
-        sincronizarArbol();
+        
+        // Intentamos cargar la estructura persistida del arbol directamente
+        std::ifstream fArbol(rutaArbol);
+        if (fArbol.is_open() && fArbol.peek() != std::ifstream::traits_type::eof()) {
+            fArbol.close();
+            arbolTurnos.cargarEstructura(rutaArbol);
+        } else {
+            if (fArbol.is_open()) fArbol.close();
+            sincronizarArbol();
+        }
     } catch (const ArchivoException& e) {
         std::cerr << "[Aviso] " << e.what() << "\n";
     }
@@ -40,6 +50,8 @@ void ClinicaServicio::guardarDatos() {
     GestorArchivos<Medico>::guardar(rutaMedicos, medicos);
     GestorArchivos<Paciente>::guardar(rutaPacientes, pacientes);
     GestorArchivos<Turno>::guardar(rutaTurnos, turnos);
+    // Persistencia explicita de la estructura de datos
+    arbolTurnos.guardarEstructura(rutaArbol);
 }
 
 int ClinicaServicio::obtenerSiguienteIdMedico() {
@@ -94,7 +106,6 @@ void ClinicaServicio::modificarMedico(int id, const std::string& telefono,
         throw EntidadNoEncontradaException("No se encontro un medico con el ID indicado.");
     }
 
-    // Validar que la nueva matricula no pertenezca a otro colega
     for (const auto& otro : medicos) {
         if (otro.getId() != id && otro.getMatricula() == matricula) {
             throw ReglaNegocioException("La matricula ya pertenece a otro profesional.");
@@ -217,7 +228,6 @@ const std::vector<Paciente>& ClinicaServicio::getPacientes() const {
 
 int ClinicaServicio::asignarTurno(int idMedico, int idPaciente, const std::string& fecha, 
                                  const std::string& hora, const std::string& motivo) {
-    // 1. Validamos que el medico exista y este activo
     Medico* med = buscarMedicoPorId(idMedico);
     if (!med) {
         throw EntidadNoEncontradaException("El medico con ID " + std::to_string(idMedico) + " no existe.");
@@ -226,7 +236,6 @@ int ClinicaServicio::asignarTurno(int idMedico, int idPaciente, const std::strin
         throw ReglaNegocioException("El medico seleccionado esta de baja logica. No puede recibir turnos.");
     }
 
-    // 2. Validamos que el paciente exista y este activo
     Paciente* pac = buscarPacientePorId(idPaciente);
     if (!pac) {
         throw EntidadNoEncontradaException("El paciente con ID " + std::to_string(idPaciente) + " no existe.");
@@ -235,25 +244,22 @@ int ClinicaServicio::asignarTurno(int idMedico, int idPaciente, const std::strin
         throw ReglaNegocioException("El paciente seleccionado esta de baja logica.");
     }
 
-    // 3. Regla de negocio: Verificar que el medico no tenga otro turno activo a esa fecha y hora
     for (const auto& t : turnos) {
         if (t.getIdMedico() == idMedico && t.getFecha() == fecha && t.getHora() == hora && t.getEstado() != "CANCELADO") {
             throw TurnoOcupadoException("El Dr/a. " + med->getApellido() + " ya tiene un turno reservado el " + fecha + " a las " + hora);
         }
     }
 
-    // 4. Regla de negocio: Verificar que el paciente no tenga otro turno a la misma hora
     for (const auto& t : turnos) {
         if (t.getIdPaciente() == idPaciente && t.getFecha() == fecha && t.getHora() == hora && t.getEstado() != "CANCELADO") {
             throw TurnoOcupadoException("El paciente " + pac->getApellido() + " ya tiene un turno programado en esa misma fecha y hora.");
         }
     }
 
-    // 5. Creacion y persistencia
     int idNuevoTurno = obtenerSiguienteIdTurno();
     Turno nuevo(idNuevoTurno, idMedico, idPaciente, fecha, hora, motivo, "PENDIENTE");
     turnos.push_back(nuevo);
-    arbolTurnos.insertar(nuevo);
+    sincronizarArbol();
     guardarDatos();
 
     return idNuevoTurno;
@@ -282,7 +288,6 @@ void ClinicaServicio::reprogramarTurno(int idTurno, const std::string& nuevaFech
         throw ReglaNegocioException("No se puede reprogramar un turno cancelado. Asigne un nuevo turno.");
     }
 
-    // Verificamos que el medico no este ocupado en el nuevo horario
     for (const auto& otro : turnos) {
         if (otro.getIdTurno() != idTurno && 
             otro.getIdMedico() == t->getIdMedico() && 
@@ -293,7 +298,6 @@ void ClinicaServicio::reprogramarTurno(int idTurno, const std::string& nuevaFech
         }
     }
 
-    // Verificamos que el paciente tampoco tenga turno superpuesto
     for (const auto& otro : turnos) {
         if (otro.getIdTurno() != idTurno && 
             otro.getIdPaciente() == t->getIdPaciente() && 
@@ -330,9 +334,15 @@ Turno* ClinicaServicio::buscarTurnoPorId(int idTurno) {
 }
 
 std::vector<Turno> ClinicaServicio::obtenerTurnosCronologicos() const {
-    // Usamos el recorrido Inorden del arbol binario de busqueda
-    // Como Turno sobrecarga operator< por fecha/hora, el arbol los entrega ordenados cronologicamente
     return arbolTurnos.obtenerInorden();
+}
+
+void ClinicaServicio::mostrarEstructuraArbol() const {
+    arbolTurnos.imprimirGrafico();
+}
+
+int ClinicaServicio::getAlturaArbol() const {
+    return arbolTurnos.getAltura();
 }
 
 void ClinicaServicio::imprimirTicket(int idTurno) {
@@ -347,7 +357,6 @@ void ClinicaServicio::imprimirTicket(int idTurno) {
         throw ReglaNegocioException("No se pueden recuperar los datos del medico o paciente asociados al turno.");
     }
 
-    // Invocacion a la funcion amiga (friend) compartida entre Turno, Medico y Paciente
     generarComprobanteTurno(*t, *m, *p);
 }
 
@@ -399,3 +408,12 @@ void ClinicaServicio::obtenerEstadisticas(int& totalTurnos, int& pendientes, int
     }
 }
 
+void ClinicaServicio::exportarReporteTexto(const std::string& nombreArchivo, const std::string& contenido) const {
+    std::string ruta = "data/" + nombreArchivo;
+    std::ofstream salida(ruta);
+    if (!salida.is_open()) {
+        throw ArchivoException("No se pudo exportar el reporte en " + ruta);
+    }
+    salida << contenido;
+    salida.close();
+}

@@ -3,9 +3,11 @@
 
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <string>
 
 // Estructura nodo para el Arbol Binario de Busqueda (ABB)
-// Aplicamos Templates para que pueda almacenar cualquier tipo de dato (Turno, int, etc.)
+// Aplicamos Templates para que pueda almacenar cualquier tipo de dato
 template <typename T>
 struct NodoABB {
     T dato;
@@ -33,13 +35,12 @@ private:
         if (valor < nodo->dato) {
             insertarRec(nodo->izq, valor);
         } else {
-            // Si es mayor o igual, se inserta en el subarbol derecho
             insertarRec(nodo->der, valor);
         }
     }
 
     // Recorrido Inorden recursivo: Subarbol Izquierdo -> Raiz -> Subarbol Derecho
-    // Para turnos, al ordenarse por operator<, nos devuelve la lista ordenada cronologicamente
+    // Devuelve los elementos ordenados cronologicamente segun operator<
     void inordenRec(NodoABB<T>* nodo, std::vector<T>& resultado) const {
         if (nodo != nullptr) {
             inordenRec(nodo->izq, resultado);
@@ -63,13 +64,58 @@ private:
         }
     }
 
-    // Destruccion recursiva en postorden para liberar la memoria dinamica y evitar leaks
+    // Destruccion recursiva en postorden para liberar la memoria dinamica
     void destruirRec(NodoABB<T>* nodo) {
         if (nodo != nullptr) {
             destruirRec(nodo->izq);
             destruirRec(nodo->der);
             delete nodo;
         }
+    }
+
+    // Recorrido Preorden recursivo para persistir la forma exacta de la estructura
+    void preordenGuardarRec(NodoABB<T>* nodo, std::ofstream& arch) const {
+        if (nodo == nullptr) {
+            arch << "#\n"; // Indicador de rama nula para preservar la topologia
+            return;
+        }
+        arch << nodo->dato.toLineaArchivo() << "\n";
+        preordenGuardarRec(nodo->izq, arch);
+        preordenGuardarRec(nodo->der, arch);
+    }
+
+    // Reconstruccion recursiva del arbol desde el archivo persistido
+    void preordenCargarRec(NodoABB<T>*& nodo, std::ifstream& arch) {
+        std::string linea;
+        if (!std::getline(arch, linea) || linea.empty() || linea == "#") {
+            nodo = nullptr;
+            return;
+        }
+        T valor = T::fromLineaArchivo(linea);
+        nodo = new NodoABB<T>(valor);
+        cantidadElementos++;
+        preordenCargarRec(nodo->izq, arch);
+        preordenCargarRec(nodo->der, arch);
+    }
+
+    // Visualizacion recursiva de la jerarquia del arbol en consola
+    void mostrarGraficoRec(NodoABB<T>* nodo, int nivel) const {
+        if (nodo != nullptr) {
+            mostrarGraficoRec(nodo->der, nivel + 1);
+            for (int i = 0; i < nivel; i++) {
+                std::cout << "         ";
+            }
+            std::cout << "-> [#" << nodo->dato.getIdTurno() << " " << nodo->dato.getFecha() << " " << nodo->dato.getHora() << "]\n";
+            mostrarGraficoRec(nodo->izq, nivel + 1);
+        }
+    }
+
+    // Calculo recursivo de la altura / profundidad maxima del arbol
+    int calcularAlturaRec(NodoABB<T>* nodo) const {
+        if (nodo == nullptr) return 0;
+        int hIzq = calcularAlturaRec(nodo->izq);
+        int hDer = calcularAlturaRec(nodo->der);
+        return 1 + (hIzq > hDer ? hIzq : hDer);
     }
 
 public:
@@ -79,7 +125,6 @@ public:
         vaciar();
     }
 
-    // Evitamos copia superficial accidental
     ArbolABB(const ArbolABB&) = delete;
     ArbolABB& operator=(const ArbolABB&) = delete;
 
@@ -87,7 +132,6 @@ public:
         insertarRec(raiz, valor);
     }
 
-    // Devuelve los elementos ordenados mediante inorden
     std::vector<T> obtenerInorden() const {
         std::vector<T> lista;
         inordenRec(raiz, lista);
@@ -113,10 +157,40 @@ public:
         return cantidadElementos;
     }
 
+    int getAltura() const {
+        return calcularAlturaRec(raiz);
+    }
+
     bool estaVacio() const {
         return raiz == nullptr;
+    }
+
+    // Metodo opcional cumplido: Visualizacion jerarquica del arbol
+    void imprimirGrafico() const {
+        if (raiz == nullptr) {
+            std::cout << " (El arbol binario se encuentra vacio)\n";
+            return;
+        }
+        mostrarGraficoRec(raiz, 0);
+    }
+
+    // Metodo opcional cumplido: Persistencia directa de la estructura de datos
+    void guardarEstructura(const std::string& ruta) const {
+        std::ofstream arch(ruta, std::ios::out | std::ios::trunc);
+        if (arch.is_open()) {
+            preordenGuardarRec(raiz, arch);
+            arch.close();
+        }
+    }
+
+    void cargarEstructura(const std::string& ruta) {
+        vaciar();
+        std::ifstream arch(ruta, std::ios::in);
+        if (arch.is_open()) {
+            preordenCargarRec(raiz, arch);
+            arch.close();
+        }
     }
 };
 
 #endif // ARBOL_ABB_H
-

@@ -3,7 +3,8 @@
 
 #include "ClinicaServicio.h"
 
-// Clase encargada de la vista e interaccion por consola (separacion de responsabilidades)
+// Clase encargada de la vista e interaccion por consola con diseno cuidado,
+// tablas alineadas y colores ANSI.
 class InterfazUI {
 private:
     ClinicaServicio servicio;
@@ -38,6 +39,7 @@ private:
     void vistaListarTurnos();
     void vistaBuscarTurno();
     void vistaImprimirComprobante();
+    void vistaVisualizarArbol(); // Visualizacion jerarquica del Arbol ABB (Recursion grafica)
 
     // Vistas Reportes
     void vistaReportePorFecha();
@@ -54,4 +56,3 @@ public:
 };
 
 #endif // INTERFAZ_UI_H
-
