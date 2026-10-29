@@ -1,0 +1,16 @@
+# Binarios y compilacion
+*.exe
+*.o
+*.obj
+*.out
+
+# IDEs y editores
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Archivos de respaldo
+*.bak
+*~
+
