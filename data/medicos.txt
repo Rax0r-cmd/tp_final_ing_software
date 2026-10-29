@@ -1,0 +1,6 @@
+1|30111222|Carlos|Gomez|1144556677|MN-45120|Cardiologia|1
+2|32444555|Laura|Fernandez|1133221100|MN-52310|Pediatria|1
+3|28999888|Martin|Rodriguez|1199887766|MN-38902|Traumatologia|1
+4|35666777|Sofia|Alvarez|1155667788|MN-61044|Dermatologia|1
+5|27333444|Mariano|Benitez|1122334455|MN-34190|Neurologia|0
+
