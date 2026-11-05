@@ -12,6 +12,8 @@ lib/
 *.suo
 *.user
 
-# Archivos de respaldo
+# Archivos de respaldo y comprimidos
 *.bak
 *~
+*.rar
+*.zip

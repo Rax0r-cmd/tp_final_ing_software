@@ -346,6 +346,32 @@ Turno* ClinicaServicio::buscarTurnoPorId(int idTurno) {
     return nullptr;
 }
 
+bool ClinicaServicio::estaMedicoOcupado(int idMedico, const std::string& fecha, const std::string& hora, int excluirIdTurno) const {
+    for (const auto& t : turnos) {
+        if (t.getIdTurno() != excluirIdTurno &&
+            t.getIdMedico() == idMedico && 
+            t.getFecha() == fecha && 
+            t.getHora() == hora && 
+            t.getEstado() != "CANCELADO") {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ClinicaServicio::estaPacienteOcupado(int idPaciente, const std::string& fecha, const std::string& hora, int excluirIdTurno) const {
+    for (const auto& t : turnos) {
+        if (t.getIdTurno() != excluirIdTurno &&
+            t.getIdPaciente() == idPaciente && 
+            t.getFecha() == fecha && 
+            t.getHora() == hora && 
+            t.getEstado() != "CANCELADO") {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<Turno> ClinicaServicio::obtenerTurnosCronologicos() const {
     return arbolTurnos.obtenerInorden();
 }

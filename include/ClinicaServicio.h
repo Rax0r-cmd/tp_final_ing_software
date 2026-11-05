@@ -73,6 +73,10 @@ public:
     void cambiarEstadoTurno(int idTurno, const std::string& nuevoEstado);
     Turno* buscarTurnoPorId(int idTurno);
     
+    // Verificacion de disponibilidad de horarios en tiempo real
+    bool estaMedicoOcupado(int idMedico, const std::string& fecha, const std::string& hora, int excluirIdTurno = 0) const;
+    bool estaPacienteOcupado(int idPaciente, const std::string& fecha, const std::string& hora, int excluirIdTurno = 0) const;
+
     // Listado cronologico usando el ArbolABB implementado (Recorrido inorden recursivo)
     std::vector<Turno> obtenerTurnosCronologicos() const;
 

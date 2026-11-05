@@ -13,17 +13,17 @@ namespace Validaciones {
     // Lee un texto que no puede quedar vacio ni tener solo espacios
     std::string leerTextoNoVacio(const std::string& mensaje);
 
-    // Lee un DNI valido (solo digitos, entre 7 y 8 numeros)
-    std::string leerDNI(const std::string& mensaje);
+    // Lee un DNI valido (solo digitos, entre 7 y 8 numeros). Si permitirCancelar es true, '0' cancela.
+    std::string leerDNI(const std::string& mensaje, bool permitirCancelar = false);
 
-    // Lee un telefono valido (solo digitos, entre 8 y 15 numeros)
-    std::string leerTelefono(const std::string& mensaje);
+    // Lee un telefono valido (solo digitos, entre 8 y 15 numeros). Si permitirCancelar es true, '0' cancela.
+    std::string leerTelefono(const std::string& mensaje, bool permitirCancelar = false);
 
-    // Lee una matricula medica valida con formato (ej: MN-45120 o MP-38902)
-    std::string leerMatricula(const std::string& mensaje);
+    // Lee una matricula medica valida con formato (ej: MN-45120 o MP-38902). Si permitirCancelar es true, '0' cancela.
+    std::string leerMatricula(const std::string& mensaje, bool permitirCancelar = false);
 
-    // Lee una fecha con formato DD/MM/AAAA y valida que sea una fecha real del calendario
-    std::string leerFecha(const std::string& mensaje);
+    // Lee una fecha con formato DD/MM/AAAA y valida que sea una fecha real del calendario. Si permitirCancelar es true, '0' cancela.
+    std::string leerFecha(const std::string& mensaje, bool permitirCancelar = false);
 
     // Lee una hora con formato HH:MM en horario de atencion clinica (08:00 a 20:00)
     std::string leerHora(const std::string& mensaje);

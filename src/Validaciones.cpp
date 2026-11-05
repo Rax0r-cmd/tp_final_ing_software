@@ -64,9 +64,13 @@ std::string leerTextoNoVacio(const std::string& mensaje) {
     }
 }
 
-std::string leerDNI(const std::string& mensaje) {
+std::string leerDNI(const std::string& mensaje, bool permitirCancelar) {
     while (true) {
         std::string dni = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && dni == "0") {
+            return "0";
+        }
+
         bool soloNumeros = true;
         for (char c : dni) {
             if (!std::isdigit(static_cast<unsigned char>(c))) {
@@ -79,13 +83,18 @@ std::string leerDNI(const std::string& mensaje) {
             return dni;
         }
 
-        std::cout << " [!] DNI invalido. Debe contener entre 7 y 8 digitos numericos sin puntos.\n";
+        std::cout << " [!] DNI invalido. Debe contener entre 7 y 8 digitos numericos sin puntos"
+                  << (permitirCancelar ? " (o 0 para cancelar)" : "") << ".\n";
     }
 }
 
-std::string leerTelefono(const std::string& mensaje) {
+std::string leerTelefono(const std::string& mensaje, bool permitirCancelar) {
     while (true) {
         std::string entrada = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && entrada == "0") {
+            return "0";
+        }
+
         std::string digitos = "";
         bool caracterInvalido = false;
 
@@ -104,13 +113,17 @@ std::string leerTelefono(const std::string& mensaje) {
             return digitos;
         }
 
-        std::cout << " [!] Telefono invalido. Debe contener entre 8 y 15 digitos numericos (ej: 1144556677 o 2234388758).\n";
+        std::cout << " [!] Telefono invalido. Debe contener entre 8 y 15 digitos numericos (ej: 1144556677 o 2234388758)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
     }
 }
 
-std::string leerMatricula(const std::string& mensaje) {
+std::string leerMatricula(const std::string& mensaje, bool permitirCancelar) {
     while (true) {
         std::string entrada = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && entrada == "0") {
+            return "0";
+        }
 
         // Convertir a mayusculas
         for (char& c : entrada) {
@@ -145,13 +158,19 @@ std::string leerMatricula(const std::string& mensaje) {
             return entrada;
         }
 
-        std::cout << " [!] Formato de matricula invalido. Ingrese el prefijo y numero (ej: MN-45120 o MP-38902) o solo el numero (ej: 45120).\n";
+        std::cout << " [!] Formato de matricula invalido. Ingrese el prefijo y numero (ej: MN-45120 o MP-38902) o solo el numero (ej: 45120)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
     }
 }
 
-std::string leerFecha(const std::string& mensaje) {
+std::string leerFecha(const std::string& mensaje, bool permitirCancelar) {
     while (true) {
-        std::string entrada = leerTextoNoVacio(mensaje + " (DD/MM/AAAA): ");
+        std::string prompt = mensaje + " (DD/MM/AAAA" + (permitirCancelar ? " o 0 para cancelar" : "") + "): ";
+        std::string entrada = leerTextoNoVacio(prompt);
+        if (permitirCancelar && entrada == "0") {
+            return "0";
+        }
+
         if (entrada.length() == 10 && entrada[2] == '/' && entrada[5] == '/') {
             try {
                 int d = std::stoi(entrada.substr(0, 2));
@@ -165,7 +184,8 @@ std::string leerFecha(const std::string& mensaje) {
                 // Si la conversion falla, cae en el mensaje de error de abajo
             }
         }
-        std::cout << " [!] Fecha invalida o imposible. Use el formato DD/MM/AAAA (ej: 15/11/2026).\n";
+        std::cout << " [!] Fecha invalida o imposible. Use el formato DD/MM/AAAA (ej: 15/11/2026)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
     }
 }
 

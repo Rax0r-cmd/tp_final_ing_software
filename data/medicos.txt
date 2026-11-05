@@ -4,3 +4,4 @@
 4|35666777|Sofia|Alvarez|1155667788|MN-61044|Dermatologia|1
 5|27333444|Mariano|Benitez|1122334455|MN-34190|Neurologia|0
 6|36780933|Jonathan|Tullo|2234388758|MN-12121|Clinico|1
+7|37821203|Ramiro|Paz|2234388767|MN-14574|Cardiologia|1
