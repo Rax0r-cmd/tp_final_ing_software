@@ -83,6 +83,72 @@ std::string leerDNI(const std::string& mensaje) {
     }
 }
 
+std::string leerTelefono(const std::string& mensaje) {
+    while (true) {
+        std::string entrada = leerTextoNoVacio(mensaje);
+        std::string digitos = "";
+        bool caracterInvalido = false;
+
+        for (char c : entrada) {
+            if (std::isdigit(static_cast<unsigned char>(c))) {
+                digitos += c;
+            } else if (c == '-' || c == ' ' || c == '(' || c == ')' || c == '+') {
+                continue;
+            } else {
+                caracterInvalido = true;
+                break;
+            }
+        }
+
+        if (!caracterInvalido && digitos.length() >= 8 && digitos.length() <= 15) {
+            return digitos;
+        }
+
+        std::cout << " [!] Telefono invalido. Debe contener entre 8 y 15 digitos numericos (ej: 1144556677 o 2234388758).\n";
+    }
+}
+
+std::string leerMatricula(const std::string& mensaje) {
+    while (true) {
+        std::string entrada = leerTextoNoVacio(mensaje);
+
+        // Convertir a mayusculas
+        for (char& c : entrada) {
+            c = std::toupper(static_cast<unsigned char>(c));
+        }
+
+        bool formatoValido = true;
+        int cantidadNumeros = 0;
+        for (char c : entrada) {
+            if (std::isalnum(static_cast<unsigned char>(c)) || c == '-') {
+                if (std::isdigit(static_cast<unsigned char>(c))) {
+                    cantidadNumeros++;
+                }
+            } else {
+                formatoValido = false;
+                break;
+            }
+        }
+
+        if (formatoValido && cantidadNumeros >= 3 && entrada.length() >= 4 && entrada.length() <= 12) {
+            // Si el usuario coloco solo el numero (ej: "45120"), anteponemos "MN-" automaticamente
+            bool soloDigitos = true;
+            for (char c : entrada) {
+                if (!std::isdigit(static_cast<unsigned char>(c))) {
+                    soloDigitos = false;
+                    break;
+                }
+            }
+            if (soloDigitos) {
+                entrada = "MN-" + entrada;
+            }
+            return entrada;
+        }
+
+        std::cout << " [!] Formato de matricula invalido. Ingrese el prefijo y numero (ej: MN-45120 o MP-38902) o solo el numero (ej: 45120).\n";
+    }
+}
+
 std::string leerFecha(const std::string& mensaje) {
     while (true) {
         std::string entrada = leerTextoNoVacio(mensaje + " (DD/MM/AAAA): ");

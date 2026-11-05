@@ -16,6 +16,12 @@ namespace Validaciones {
     // Lee un DNI valido (solo digitos, entre 7 y 8 numeros)
     std::string leerDNI(const std::string& mensaje);
 
+    // Lee un telefono valido (solo digitos, entre 8 y 15 numeros)
+    std::string leerTelefono(const std::string& mensaje);
+
+    // Lee una matricula medica valida con formato (ej: MN-45120 o MP-38902)
+    std::string leerMatricula(const std::string& mensaje);
+
     // Lee una fecha con formato DD/MM/AAAA y valida que sea una fecha real del calendario
     std::string leerFecha(const std::string& mensaje);
 

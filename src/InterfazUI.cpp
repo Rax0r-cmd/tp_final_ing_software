@@ -218,8 +218,8 @@ void InterfazUI::vistaAltaMedico() {
     std::string dni = leerDNI("Ingrese DNI (sin puntos): ");
     std::string nombre = leerTextoNoVacio("Ingrese Nombre: ");
     std::string apellido = leerTextoNoVacio("Ingrese Apellido: ");
-    std::string telefono = leerTextoNoVacio("Ingrese Telefono de contacto: ");
-    std::string matricula = leerTextoNoVacio("Ingrese Nro de Matricula: ");
+    std::string telefono = leerTelefono("Ingrese Telefono de contacto (ej: 1144556677 o 2234388758): ");
+    std::string matricula = leerMatricula("Ingrese Nro de Matricula (ej: MN-45120 o MP-38902): ");
     std::string especialidad = leerTextoNoVacio("Ingrese Especialidad (ej: Cardiologia, Pediatria): ");
 
     try {
@@ -249,8 +249,8 @@ void InterfazUI::vistaModificarMedico() {
     m->mostrarDatos();
     std::cout << "\nIngrese los nuevos datos a actualizar:\n";
 
-    std::string nuevoTel = leerTextoNoVacio("Nuevo Telefono: ");
-    std::string nuevaMat = leerTextoNoVacio("Nueva Matricula: ");
+    std::string nuevoTel = leerTelefono("Nuevo Telefono (ej: 1144556677 o 2234388758): ");
+    std::string nuevaMat = leerMatricula("Nueva Matricula (ej: MN-45120 o MP-38902): ");
     std::string nuevaEsp = leerTextoNoVacio("Nueva Especialidad: ");
 
     try {
@@ -414,7 +414,7 @@ void InterfazUI::vistaAltaPaciente() {
     std::string dni = leerDNI("Ingrese DNI (sin puntos): ");
     std::string nombre = leerTextoNoVacio("Ingrese Nombre: ");
     std::string apellido = leerTextoNoVacio("Ingrese Apellido: ");
-    std::string telefono = leerTextoNoVacio("Ingrese Telefono: ");
+    std::string telefono = leerTelefono("Ingrese Telefono de contacto (ej: 1144556677 o 2234388758): ");
     std::string obraSocial = leerTextoNoVacio("Ingrese Obra Social / Prepaga (ej: OSDE, PAMI, Particular): ");
     std::string nroAfiliado = leerTextoNoVacio("Ingrese Nro de Afiliado (o 'S/N' si es particular): ");
 
@@ -445,7 +445,7 @@ void InterfazUI::vistaModificarPaciente() {
     p->mostrarDatos();
 
     std::cout << "\nIngrese los nuevos datos a actualizar:\n";
-    std::string tel = leerTextoNoVacio("Nuevo Telefono: ");
+    std::string tel = leerTelefono("Nuevo Telefono (ej: 1144556677 o 2234388758): ");
     std::string os = leerTextoNoVacio("Nueva Obra Social: ");
     std::string af = leerTextoNoVacio("Nuevo Nro de Afiliado: ");
 
