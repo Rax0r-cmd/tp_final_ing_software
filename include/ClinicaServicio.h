@@ -50,6 +50,7 @@ public:
     void reactivarMedico(int id);
     Medico* buscarMedicoPorId(int id);
     Medico* buscarMedicoPorDni(const std::string& dni);
+    Medico* buscarMedicoPorMatricula(const std::string& matricula);
     const std::vector<Medico>& getMedicos() const;
 
     // ================= CRUD PACIENTES =================

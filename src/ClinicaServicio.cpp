@@ -156,6 +156,13 @@ Medico* ClinicaServicio::buscarMedicoPorDni(const std::string& dni) {
     return nullptr;
 }
 
+Medico* ClinicaServicio::buscarMedicoPorMatricula(const std::string& matricula) {
+    for (auto& m : medicos) {
+        if (m.getMatricula() == matricula) return &m;
+    }
+    return nullptr;
+}
+
 const std::vector<Medico>& ClinicaServicio::getMedicos() const {
     return medicos;
 }

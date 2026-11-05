@@ -215,11 +215,36 @@ void InterfazUI::vistaAltaMedico() {
     imprimirBanner("ALTA DE MEDICO");
     std::cout << "Complete los siguientes datos del profesional:\n\n";
 
-    std::string dni = leerDNI("Ingrese DNI (sin puntos): ");
+    // 1. Validacion de DNI en tiempo real
+    std::string dni;
+    while (true) {
+        dni = leerDNI("Ingrese DNI (sin puntos): ");
+        Medico* existente = servicio.buscarMedicoPorDni(dni);
+        if (existente != nullptr) {
+            std::cout << " " << ROJO << "[!] El DNI " << dni << " ya pertenece a un medico registrado en el sistema (Dr/a. " 
+                      << existente->getApellido() << ", " << existente->getNombre() << "). Ingrese un DNI diferente.\n" << RESET;
+        } else {
+            break;
+        }
+    }
+
     std::string nombre = leerTextoNoVacio("Ingrese Nombre: ");
     std::string apellido = leerTextoNoVacio("Ingrese Apellido: ");
     std::string telefono = leerTelefono("Ingrese Telefono de contacto (ej: 1144556677 o 2234388758): ");
-    std::string matricula = leerMatricula("Ingrese Nro de Matricula (ej: MN-45120 o MP-38902): ");
+
+    // 2. Validacion de Matricula en tiempo real
+    std::string matricula;
+    while (true) {
+        matricula = leerMatricula("Ingrese Nro de Matricula (ej: MN-45120 o MP-38902): ");
+        Medico* existenteMat = servicio.buscarMedicoPorMatricula(matricula);
+        if (existenteMat != nullptr) {
+            std::cout << " " << ROJO << "[!] La matricula " << matricula << " ya pertenece a otro profesional registrado (Dr/a. " 
+                      << existenteMat->getApellido() << "). Ingrese una matricula diferente.\n" << RESET;
+        } else {
+            break;
+        }
+    }
+
     std::string especialidad = leerTextoNoVacio("Ingrese Especialidad (ej: Cardiologia, Pediatria): ");
 
     try {
@@ -250,7 +275,20 @@ void InterfazUI::vistaModificarMedico() {
     std::cout << "\nIngrese los nuevos datos a actualizar:\n";
 
     std::string nuevoTel = leerTelefono("Nuevo Telefono (ej: 1144556677 o 2234388758): ");
-    std::string nuevaMat = leerMatricula("Nueva Matricula (ej: MN-45120 o MP-38902): ");
+    
+    // Validacion de matricula en tiempo real para modificacion
+    std::string nuevaMat;
+    while (true) {
+        nuevaMat = leerMatricula("Nueva Matricula (ej: MN-45120 o MP-38902): ");
+        Medico* existenteMat = servicio.buscarMedicoPorMatricula(nuevaMat);
+        if (existenteMat != nullptr && existenteMat->getId() != id) {
+            std::cout << " " << ROJO << "[!] La matricula " << nuevaMat << " ya pertenece a otro profesional registrado (Dr/a. " 
+                      << existenteMat->getApellido() << "). Ingrese una matricula diferente.\n" << RESET;
+        } else {
+            break;
+        }
+    }
+
     std::string nuevaEsp = leerTextoNoVacio("Nueva Especialidad: ");
 
     try {
@@ -411,7 +449,19 @@ void InterfazUI::vistaAltaPaciente() {
     imprimirBanner("ALTA DE PACIENTE");
     std::cout << "Ingrese los datos del nuevo paciente:\n\n";
 
-    std::string dni = leerDNI("Ingrese DNI (sin puntos): ");
+    // Validacion de DNI en tiempo real
+    std::string dni;
+    while (true) {
+        dni = leerDNI("Ingrese DNI (sin puntos): ");
+        Paciente* existente = servicio.buscarPacientePorDni(dni);
+        if (existente != nullptr) {
+            std::cout << " " << ROJO << "[!] El DNI " << dni << " ya pertenece a un paciente registrado en el padron (" 
+                      << existente->getApellido() << ", " << existente->getNombre() << "). Ingrese un DNI diferente.\n" << RESET;
+        } else {
+            break;
+        }
+    }
+
     std::string nombre = leerTextoNoVacio("Ingrese Nombre: ");
     std::string apellido = leerTextoNoVacio("Ingrese Apellido: ");
     std::string telefono = leerTelefono("Ingrese Telefono de contacto (ej: 1144556677 o 2234388758): ");
