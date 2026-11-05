@@ -40,3 +40,4 @@ namespace Colores {
 }
 
 #endif // COLORES_H
+

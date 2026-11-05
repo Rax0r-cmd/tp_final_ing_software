@@ -1,4 +1,5 @@
 #include "../include/Paciente.h"
+#include "../include/Colores.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -21,7 +22,9 @@ void Paciente::mostrarDatos() const {
               << " | OS: " << obraSocial 
               << " | Nro Afiliado: " << numeroAfiliado
               << " | Tel: " << telefono
-              << " | Estado: " << (activo ? "Activo" : "Baja logica") 
+              << " | Estado: " 
+              << (activo ? (Colores::VERDE + "Activo" + Colores::RESET) 
+                         : (Colores::ROJO + "Baja logica (Inactivo)" + Colores::RESET))
               << std::endl;
 }
 

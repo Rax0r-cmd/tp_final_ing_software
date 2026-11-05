@@ -50,6 +50,11 @@ private:
     // Encabezados visuales
     void imprimirBanner(const std::string& titulo);
 
+    // Tablas e historiales de registros para facilitar el ingreso de datos
+    void mostrarTablaMedicos(const std::string& titulo = "MEDICOS REGISTRADOS", bool soloActivos = false);
+    void mostrarTablaPacientes(const std::string& titulo = "PACIENTES REGISTRADOS", bool soloActivos = false);
+    void mostrarTablaTurnos(const std::string& titulo = "TURNOS REGISTRADOS");
+
 public:
     InterfazUI();
     void ejecutar();

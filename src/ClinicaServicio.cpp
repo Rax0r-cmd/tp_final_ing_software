@@ -135,6 +135,9 @@ void ClinicaServicio::reactivarMedico(int id) {
     if (!m) {
         throw EntidadNoEncontradaException("No se encontro el medico.");
     }
+    if (m->isActivo()) {
+        throw ReglaNegocioException("El profesional ya se encuentra activo en el sistema.");
+    }
     m->setActivo(true);
     guardarDatos();
 }
@@ -201,6 +204,9 @@ void ClinicaServicio::reactivarPaciente(int id) {
     Paciente* p = buscarPacientePorId(id);
     if (!p) {
         throw EntidadNoEncontradaException("No se encontro el paciente.");
+    }
+    if (p->isActivo()) {
+        throw ReglaNegocioException("El paciente ya se encuentra activo en el sistema.");
     }
     p->setActivo(true);
     guardarDatos();

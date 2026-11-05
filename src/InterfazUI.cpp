@@ -22,13 +22,147 @@ void InterfazUI::imprimirBanner(const std::string& titulo) {
               << "========================================================================================\n\n" << RESET;
 }
 
+// ==========================================
+// METODOS AUXILIARES: TABLAS E HISTORIALES
+// ==========================================
+
+void InterfazUI::mostrarTablaMedicos(const std::string& titulo, bool soloActivos) {
+    const auto& lista = servicio.getMedicos();
+    std::cout << AMARILLO << "--- " << titulo << " ---" << RESET << "\n";
+
+    int visibles = 0;
+    for (const auto& m : lista) {
+        if (!soloActivos || m.isActivo()) visibles++;
+    }
+
+    if (visibles == 0) {
+        std::cout << GRIS << "  (No hay medicos registrados para mostrar)\n" << RESET;
+        std::cout << CIAN << std::string(97, '-') << RESET << "\n";
+        return;
+    }
+
+    std::cout << BLANCO << NEGRITA << std::left 
+              << std::setw(6)  << "ID" 
+              << std::setw(12) << "DNI" 
+              << std::setw(24) << "Apellido y Nombre" 
+              << std::setw(12) << "Matricula" 
+              << std::setw(20) << "Especialidad" 
+              << std::setw(13) << "Telefono" 
+              << std::setw(10) << "Estado" << RESET << "\n";
+    std::cout << CIAN << std::string(97, '-') << RESET << "\n";
+
+    for (const auto& m : lista) {
+        if (soloActivos && !m.isActivo()) continue;
+        std::string nombreCompleto = m.getApellido() + ", " + m.getNombre();
+        std::cout << std::left 
+                  << std::setw(6)  << m.getId() 
+                  << std::setw(12) << m.getDni() 
+                  << std::setw(24) << (nombreCompleto.length() > 22 ? nombreCompleto.substr(0, 21) + "." : nombreCompleto)
+                  << std::setw(12) << m.getMatricula() 
+                  << std::setw(20) << (m.getEspecialidad().length() > 18 ? m.getEspecialidad().substr(0, 17) + "." : m.getEspecialidad())
+                  << std::setw(13) << m.getTelefono() 
+                  << (m.isActivo() ? VERDE + "Activo" : ROJO + "Baja") << RESET 
+                  << "\n";
+    }
+    std::cout << CIAN << std::string(97, '-') << RESET << "\n";
+}
+
+void InterfazUI::mostrarTablaPacientes(const std::string& titulo, bool soloActivos) {
+    const auto& lista = servicio.getPacientes();
+    std::cout << AMARILLO << "--- " << titulo << " ---" << RESET << "\n";
+
+    int visibles = 0;
+    for (const auto& p : lista) {
+        if (!soloActivos || p.isActivo()) visibles++;
+    }
+
+    if (visibles == 0) {
+        std::cout << GRIS << "  (No hay pacientes registrados para mostrar)\n" << RESET;
+        std::cout << CIAN << std::string(96, '-') << RESET << "\n";
+        return;
+    }
+
+    std::cout << BLANCO << NEGRITA << std::left 
+              << std::setw(6)  << "ID" 
+              << std::setw(12) << "DNI" 
+              << std::setw(24) << "Apellido y Nombre" 
+              << std::setw(15) << "Obra Social" 
+              << std::setw(16) << "Nro Afiliado" 
+              << std::setw(13) << "Telefono" 
+              << std::setw(10) << "Estado" << RESET << "\n";
+    std::cout << CIAN << std::string(96, '-') << RESET << "\n";
+
+    for (const auto& p : lista) {
+        if (soloActivos && !p.isActivo()) continue;
+        std::string nombreCompleto = p.getApellido() + ", " + p.getNombre();
+        std::cout << std::left 
+                  << std::setw(6)  << p.getId() 
+                  << std::setw(12) << p.getDni() 
+                  << std::setw(24) << (nombreCompleto.length() > 22 ? nombreCompleto.substr(0, 21) + "." : nombreCompleto)
+                  << std::setw(15) << (p.getObraSocial().length() > 13 ? p.getObraSocial().substr(0, 12) + "." : p.getObraSocial())
+                  << std::setw(16) << p.getNumeroAfiliado() 
+                  << std::setw(13) << p.getTelefono() 
+                  << (p.isActivo() ? VERDE + "Activo" : ROJO + "Baja") << RESET 
+                  << "\n";
+    }
+    std::cout << CIAN << std::string(96, '-') << RESET << "\n";
+}
+
+void InterfazUI::mostrarTablaTurnos(const std::string& titulo) {
+    auto lista = servicio.obtenerTurnosCronologicos();
+    std::cout << AMARILLO << "--- " << titulo << " ---" << RESET << "\n";
+
+    if (lista.empty()) {
+        std::cout << GRIS << "  (No hay turnos registrados en el sistema)\n" << RESET;
+        std::cout << CIAN << std::string(98, '-') << RESET << "\n";
+        return;
+    }
+
+    std::cout << BLANCO << NEGRITA << std::left 
+              << std::setw(6)  << "ID" 
+              << std::setw(12) << "Fecha" 
+              << std::setw(8)  << "Hora" 
+              << std::setw(22) << "Medico" 
+              << std::setw(24) << "Paciente" 
+              << std::setw(13) << "Estado" 
+              << "Motivo" << RESET << "\n";
+    std::cout << CIAN << std::string(98, '-') << RESET << "\n";
+
+    for (const auto& t : lista) {
+        Medico* m = servicio.buscarMedicoPorId(t.getIdMedico());
+        Paciente* p = servicio.buscarPacientePorId(t.getIdPaciente());
+
+        std::string nombreMed = (m ? "Dr. " + m->getApellido() : "ID " + std::to_string(t.getIdMedico()));
+        std::string nombrePac = (p ? p->getApellido() + ", " + p->getNombre() : "ID " + std::to_string(t.getIdPaciente()));
+
+        std::string colorEst = RESET;
+        if (t.getEstado() == "PENDIENTE") colorEst = AMARILLO;
+        else if (t.getEstado() == "ATENDIDO") colorEst = VERDE;
+        else if (t.getEstado() == "CANCELADO") colorEst = ROJO;
+
+        std::cout << std::left 
+                  << std::setw(6)  << t.getIdTurno() 
+                  << std::setw(12) << t.getFecha() 
+                  << std::setw(8)  << t.getHora() 
+                  << std::setw(22) << (nombreMed.length() > 20 ? nombreMed.substr(0, 19) + "." : nombreMed)
+                  << std::setw(24) << (nombrePac.length() > 22 ? nombrePac.substr(0, 21) + "." : nombrePac)
+                  << colorEst << std::setw(13) << t.getEstado() << RESET
+                  << (t.getMotivo().length() > 20 ? t.getMotivo().substr(0, 19) + "." : t.getMotivo()) << "\n";
+    }
+    std::cout << CIAN << std::string(98, '-') << RESET << "\n";
+}
+
+// ==========================================
+// MENU PRINCIPAL
+// ==========================================
+
 void InterfazUI::ejecutar() {
     int opcion = -1;
     do {
         imprimirBanner("MENU PRINCIPAL");
-        std::cout << "  " << AMARILLO << "[1]" << RESET << " Modulo de Medicos (ABML)\n";
-        std::cout << "  " << AMARILLO << "[2]" << RESET << " Modulo de Pacientes (ABML)\n";
-        std::cout << "  " << AMARILLO << "[3]" << RESET << " Asignacion y Control de Turnos (Arbol ABB)\n";
+        std::cout << "  " << AMARILLO << "[1]" << RESET << " Modulo de Medicos\n";
+        std::cout << "  " << AMARILLO << "[2]" << RESET << " Modulo de Pacientes\n";
+        std::cout << "  " << AMARILLO << "[3]" << RESET << " Asignacion y Control de Turnos\n";
         std::cout << "  " << AMARILLO << "[4]" << RESET << " Reportes y Estadisticas del Sistema\n";
         std::cout << "  " << ROJO << "[0]" << RESET << " Salir y Guardar Cambios\n";
         std::cout << CIAN << "----------------------------------------------------------------------------------------\n" << RESET;
@@ -40,9 +174,9 @@ void InterfazUI::ejecutar() {
             case 3: menuTurnos(); break;
             case 4: menuReportes(); break;
             case 0:
-                std::cout << "\n" << VERDE << "[+] Guardando informacion y persistiendo estructura en disco..." << RESET << "\n";
+                std::cout << "\n" << VERDE << "[+] Guardando informacion y sincronizando registros en disco..." << RESET << "\n";
                 servicio.guardarDatos();
-                std::cout << VERDE << "[+] Datos sincronizados exitosamente. Hasta luego!\n" << RESET;
+                std::cout << VERDE << "[+] Datos guardados exitosamente. Hasta luego!\n" << RESET;
                 break;
         }
     } while (opcion != 0);
@@ -100,18 +234,20 @@ void InterfazUI::vistaAltaMedico() {
 
 void InterfazUI::vistaModificarMedico() {
     imprimirBanner("MODIFICACION DE MEDICO");
-    int id = leerEntero("Ingrese el ID del medico a modificar: ", 1, 99999);
+    mostrarTablaMedicos("HISTORIAL DE MEDICOS REGISTRADOS");
+
+    int id = leerEntero("\nIngrese el ID del medico a modificar: ", 1, 99999);
 
     Medico* m = servicio.buscarMedicoPorId(id);
     if (!m) {
-        std::cout << "\n" << ROJO << "[ERROR] No existe ningun medico con ese ID." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun medico con el ID " << id << "." << RESET << "\n";
         pausar();
         return;
     }
 
-    std::cout << "\nDatos actuales:\n";
+    std::cout << "\nDatos actuales del profesional:\n";
     m->mostrarDatos();
-    std::cout << "\nIngrese los nuevos datos:\n";
+    std::cout << "\nIngrese los nuevos datos a actualizar:\n";
 
     std::string nuevoTel = leerTextoNoVacio("Nuevo Telefono: ");
     std::string nuevaMat = leerTextoNoVacio("Nueva Matricula: ");
@@ -129,25 +265,41 @@ void InterfazUI::vistaModificarMedico() {
 
 void InterfazUI::vistaBajaMedico() {
     imprimirBanner("BAJA LOGICA DE MEDICO");
-    int id = leerEntero("Ingrese el ID del medico a dar de baja: ", 1, 99999);
+    mostrarTablaMedicos("HISTORIAL DE MEDICOS REGISTRADOS");
+
+    int id = leerEntero("\nIngrese el ID del medico a dar de baja: ", 1, 99999);
 
     Medico* m = servicio.buscarMedicoPorId(id);
     if (!m) {
-        std::cout << "\n" << ROJO << "[ERROR] Medico no encontrado." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun medico con el ID " << id << "." << RESET << "\n";
         pausar();
         return;
     }
 
+    std::cout << "\nDatos del profesional seleccionado:\n";
     m->mostrarDatos();
+
+    // Comprobacion explicita si ya se encuentra de baja
+    if (!m->isActivo()) {
+        std::cout << "\n" << AMARILLO << NEGRITA 
+                  << "[!] AVISO: El Dr/a. " << m->getApellido() 
+                  << " YA SE ENCUENTRA DADO DE BAJA LOGICA en el sistema." << RESET << "\n";
+        std::cout << "    Actualmente su estado es inactivo y no puede recibir turnos.\n";
+        std::cout << "    Si desea volver a habilitarlo, utilice la opcion 'Reactivar medico'.\n";
+        pausar();
+        return;
+    }
+
     if (confirmarAccion("\nEsta seguro que desea dar de baja logica a este profesional?")) {
         try {
             servicio.bajaLogicaMedico(id);
-            std::cout << "\n" << VERDE << "[OK] Se aplico la baja logica. El medico ya no podra recibir nuevos turnos." << RESET << "\n";
+            std::cout << "\n" << VERDE << "[OK] Se aplico la baja logica exitosamente al Dr/a. " 
+                      << m->getApellido() << ". El profesional ya no recibira nuevos turnos." << RESET << "\n";
         } catch (const ClinicaException& e) {
             std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
         }
     } else {
-        std::cout << "\nOperacion cancelada.\n";
+        std::cout << "\nOperacion cancelada por el usuario.\n";
     }
 
     pausar();
@@ -155,13 +307,40 @@ void InterfazUI::vistaBajaMedico() {
 
 void InterfazUI::vistaReactivarMedico() {
     imprimirBanner("REACTIVACION DE MEDICO");
-    int id = leerEntero("Ingrese el ID del medico a reactivar: ", 1, 99999);
+    mostrarTablaMedicos("HISTORIAL DE MEDICOS REGISTRADOS");
 
-    try {
-        servicio.reactivarMedico(id);
-        std::cout << "\n" << VERDE << "[OK] El profesional ha sido reactivado y vuelve a estar disponible para turnos." << RESET << "\n";
-    } catch (const ClinicaException& e) {
-        std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
+    int id = leerEntero("\nIngrese el ID del medico a reactivar: ", 1, 99999);
+
+    Medico* m = servicio.buscarMedicoPorId(id);
+    if (!m) {
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun medico con el ID " << id << "." << RESET << "\n";
+        pausar();
+        return;
+    }
+
+    std::cout << "\nDatos del profesional seleccionado:\n";
+    m->mostrarDatos();
+
+    // Comprobacion explicita si ya se encuentra activo
+    if (m->isActivo()) {
+        std::cout << "\n" << AMARILLO << NEGRITA 
+                  << "[!] AVISO: El Dr/a. " << m->getApellido() 
+                  << " YA SE ENCUENTRA ACTIVO en el sistema." << RESET << "\n";
+        std::cout << "    No requiere reactivacion porque ya esta habilitado para atender turnos.\n";
+        pausar();
+        return;
+    }
+
+    if (confirmarAccion("\nConfirma que desea reactivar a este profesional?")) {
+        try {
+            servicio.reactivarMedico(id);
+            std::cout << "\n" << VERDE << "[OK] El profesional Dr/a. " << m->getApellido() 
+                      << " ha sido reactivado y vuelve a estar disponible para turnos." << RESET << "\n";
+        } catch (const ClinicaException& e) {
+            std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
+        }
+    } else {
+        std::cout << "\nOperacion cancelada por el usuario.\n";
     }
 
     pausar();
@@ -169,35 +348,7 @@ void InterfazUI::vistaReactivarMedico() {
 
 void InterfazUI::vistaListarMedicos() {
     imprimirBanner("LISTADO DE MEDICOS REGISTRADOS");
-    const auto& lista = servicio.getMedicos();
-
-    if (lista.empty()) {
-        std::cout << "No hay medicos registrados en el sistema.\n";
-    } else {
-        std::cout << BLANCO << NEGRITA << std::left 
-                  << std::setw(5)  << "ID" 
-                  << std::setw(12) << "DNI" 
-                  << std::setw(24) << "Apellido y Nombre" 
-                  << std::setw(12) << "Matricula" 
-                  << std::setw(20) << "Especialidad" 
-                  << std::setw(14) << "Telefono" 
-                  << std::setw(10) << "Estado" << RESET << "\n";
-        std::cout << CIAN << std::string(97, '-') << RESET << "\n";
-
-        for (const auto& m : lista) {
-            std::string nombreCompleto = m.getApellido() + ", " + m.getNombre();
-            std::cout << std::left 
-                      << std::setw(5)  << m.getId() 
-                      << std::setw(12) << m.getDni() 
-                      << std::setw(24) << (nombreCompleto.length() > 22 ? nombreCompleto.substr(0, 21) + "." : nombreCompleto)
-                      << std::setw(12) << m.getMatricula() 
-                      << std::setw(20) << (m.getEspecialidad().length() > 18 ? m.getEspecialidad().substr(0, 17) + "." : m.getEspecialidad())
-                      << std::setw(14) << m.getTelefono() 
-                      << (m.isActivo() ? VERDE + "Activo" : ROJO + "Baja") << RESET 
-                      << "\n";
-        }
-    }
-
+    mostrarTablaMedicos("HISTORIAL COMPLETO DE MEDICOS", false);
     pausar();
 }
 
@@ -209,7 +360,8 @@ void InterfazUI::vistaBuscarMedico() {
 
     Medico* m = nullptr;
     if (opc == 1) {
-        int id = leerEntero("Ingrese ID: ", 1, 99999);
+        mostrarTablaMedicos("HISTORIAL DISPONIBLE", false);
+        int id = leerEntero("\nIngrese ID: ", 1, 99999);
         m = servicio.buscarMedicoPorId(id);
     } else {
         std::string dni = leerDNI("Ingrese DNI: ");
@@ -278,19 +430,21 @@ void InterfazUI::vistaAltaPaciente() {
 
 void InterfazUI::vistaModificarPaciente() {
     imprimirBanner("MODIFICACION DE PACIENTE");
-    int id = leerEntero("Ingrese ID del paciente: ", 1, 99999);
+    mostrarTablaPacientes("HISTORIAL DE PACIENTES REGISTRADOS");
+
+    int id = leerEntero("\nIngrese ID del paciente a modificar: ", 1, 99999);
 
     Paciente* p = servicio.buscarPacientePorId(id);
     if (!p) {
-        std::cout << "\n" << ROJO << "[ERROR] Paciente no encontrado." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun paciente con el ID " << id << "." << RESET << "\n";
         pausar();
         return;
     }
 
-    std::cout << "\nDatos actuales:\n";
+    std::cout << "\nDatos actuales del paciente:\n";
     p->mostrarDatos();
 
-    std::cout << "\nNuevos datos:\n";
+    std::cout << "\nIngrese los nuevos datos a actualizar:\n";
     std::string tel = leerTextoNoVacio("Nuevo Telefono: ");
     std::string os = leerTextoNoVacio("Nueva Obra Social: ");
     std::string af = leerTextoNoVacio("Nuevo Nro de Afiliado: ");
@@ -307,25 +461,40 @@ void InterfazUI::vistaModificarPaciente() {
 
 void InterfazUI::vistaBajaPaciente() {
     imprimirBanner("BAJA LOGICA DE PACIENTE");
-    int id = leerEntero("Ingrese ID del paciente a dar de baja: ", 1, 99999);
+    mostrarTablaPacientes("HISTORIAL DE PACIENTES REGISTRADOS");
+
+    int id = leerEntero("\nIngrese ID del paciente a dar de baja: ", 1, 99999);
 
     Paciente* p = servicio.buscarPacientePorId(id);
     if (!p) {
-        std::cout << "\n" << ROJO << "[ERROR] Paciente inexistente." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun paciente con el ID " << id << "." << RESET << "\n";
         pausar();
         return;
     }
 
+    std::cout << "\nDatos del paciente seleccionado:\n";
     p->mostrarDatos();
+
+    // Comprobacion explicita si ya se encuentra de baja
+    if (!p->isActivo()) {
+        std::cout << "\n" << AMARILLO << NEGRITA 
+                  << "[!] AVISO: El paciente " << p->getApellido() << ", " << p->getNombre()
+                  << " YA SE ENCUENTRA DADO DE BAJA LOGICA en el padron." << RESET << "\n";
+        std::cout << "    Actualmente su estado es inactivo y no puede solicitar nuevos turnos.\n";
+        std::cout << "    Si desea volver a habilitarlo, utilice la opcion 'Reactivar paciente'.\n";
+        pausar();
+        return;
+    }
+
     if (confirmarAccion("\nConfirma la baja logica de este paciente?")) {
         try {
             servicio.bajaLogicaPaciente(id);
-            std::cout << "\n" << VERDE << "[OK] El paciente fue dado de baja logica." << RESET << "\n";
+            std::cout << "\n" << VERDE << "[OK] El paciente fue dado de baja logica exitosamente." << RESET << "\n";
         } catch (const ClinicaException& e) {
             std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
         }
     } else {
-        std::cout << "\nOperacion cancelada.\n";
+        std::cout << "\nOperacion cancelada por el usuario.\n";
     }
 
     pausar();
@@ -333,13 +502,39 @@ void InterfazUI::vistaBajaPaciente() {
 
 void InterfazUI::vistaReactivarPaciente() {
     imprimirBanner("REACTIVACION DE PACIENTE");
-    int id = leerEntero("Ingrese ID del paciente a reactivar: ", 1, 99999);
+    mostrarTablaPacientes("HISTORIAL DE PACIENTES REGISTRADOS");
 
-    try {
-        servicio.reactivarPaciente(id);
-        std::cout << "\n" << VERDE << "[OK] El paciente fue reactivado satisfactoriamente." << RESET << "\n";
-    } catch (const ClinicaException& e) {
-        std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
+    int id = leerEntero("\nIngrese ID del paciente a reactivar: ", 1, 99999);
+
+    Paciente* p = servicio.buscarPacientePorId(id);
+    if (!p) {
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun paciente con el ID " << id << "." << RESET << "\n";
+        pausar();
+        return;
+    }
+
+    std::cout << "\nDatos del paciente seleccionado:\n";
+    p->mostrarDatos();
+
+    // Comprobacion explicita si ya se encuentra activo
+    if (p->isActivo()) {
+        std::cout << "\n" << AMARILLO << NEGRITA 
+                  << "[!] AVISO: El paciente " << p->getApellido() << ", " << p->getNombre()
+                  << " YA SE ENCUENTRA ACTIVO en el padron." << RESET << "\n";
+        std::cout << "    No requiere reactivacion.\n";
+        pausar();
+        return;
+    }
+
+    if (confirmarAccion("\nConfirma que desea reactivar a este paciente?")) {
+        try {
+            servicio.reactivarPaciente(id);
+            std::cout << "\n" << VERDE << "[OK] El paciente ha sido reactivado satisfactoriamente." << RESET << "\n";
+        } catch (const ClinicaException& e) {
+            std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
+        }
+    } else {
+        std::cout << "\nOperacion cancelada por el usuario.\n";
     }
 
     pausar();
@@ -347,35 +542,7 @@ void InterfazUI::vistaReactivarPaciente() {
 
 void InterfazUI::vistaListarPacientes() {
     imprimirBanner("LISTADO DE PACIENTES REGISTRADOS");
-    const auto& lista = servicio.getPacientes();
-
-    if (lista.empty()) {
-        std::cout << "No hay pacientes registrados en el sistema.\n";
-    } else {
-        std::cout << BLANCO << NEGRITA << std::left 
-                  << std::setw(5)  << "ID" 
-                  << std::setw(12) << "DNI" 
-                  << std::setw(24) << "Apellido y Nombre" 
-                  << std::setw(15) << "Obra Social" 
-                  << std::setw(16) << "Nro Afiliado" 
-                  << std::setw(14) << "Telefono" 
-                  << std::setw(10) << "Estado" << RESET << "\n";
-        std::cout << CIAN << std::string(96, '-') << RESET << "\n";
-
-        for (const auto& p : lista) {
-            std::string nombreCompleto = p.getApellido() + ", " + p.getNombre();
-            std::cout << std::left 
-                      << std::setw(5)  << p.getId() 
-                      << std::setw(12) << p.getDni() 
-                      << std::setw(24) << (nombreCompleto.length() > 22 ? nombreCompleto.substr(0, 21) + "." : nombreCompleto)
-                      << std::setw(15) << (p.getObraSocial().length() > 13 ? p.getObraSocial().substr(0, 12) + "." : p.getObraSocial())
-                      << std::setw(16) << p.getNumeroAfiliado() 
-                      << std::setw(14) << p.getTelefono() 
-                      << (p.isActivo() ? VERDE + "Activo" : ROJO + "Baja") << RESET 
-                      << "\n";
-        }
-    }
-
+    mostrarTablaPacientes("HISTORIAL COMPLETO DE PACIENTES", false);
     pausar();
 }
 
@@ -387,7 +554,8 @@ void InterfazUI::vistaBuscarPaciente() {
 
     Paciente* p = nullptr;
     if (opc == 1) {
-        int id = leerEntero("Ingrese ID: ", 1, 99999);
+        mostrarTablaPacientes("HISTORIAL DISPONIBLE", false);
+        int id = leerEntero("\nIngrese ID: ", 1, 99999);
         p = servicio.buscarPacientePorId(id);
     } else {
         std::string dni = leerDNI("Ingrese DNI: ");
@@ -412,14 +580,14 @@ void InterfazUI::menuTurnos() {
     int opc = -1;
     do {
         imprimirBanner("GESTION DE TURNOS");
-        std::cout << "  " << AMARILLO << "[1]" << RESET << " Asignar nuevo turno (Validacion de no colision)\n";
+        std::cout << "  " << AMARILLO << "[1]" << RESET << " Asignar nuevo turno\n";
         std::cout << "  " << AMARILLO << "[2]" << RESET << " Cancelar turno existente\n";
-        std::cout << "  " << AMARILLO << "[3]" << RESET << " Reprogramar fecha/hora de turno\n";
-        std::cout << "  " << AMARILLO << "[4]" << RESET << " Cambiar estado de turno (Atendido / Pendiente)\n";
-        std::cout << "  " << AMARILLO << "[5]" << RESET << " Listado cronologico general (Inorden Recursivo ABB)\n";
+        std::cout << "  " << AMARILLO << "[3]" << RESET << " Reprogramar turno\n";
+        std::cout << "  " << AMARILLO << "[4]" << RESET << " Cambiar estado de turno\n";
+        std::cout << "  " << AMARILLO << "[5]" << RESET << " Listado cronologico general de turnos\n";
         std::cout << "  " << AMARILLO << "[6]" << RESET << " Consultar turno por ID\n";
-        std::cout << "  " << AMARILLO << "[7]" << RESET << " Imprimir Comprobante Oficial (Funcion Friend)\n";
-        std::cout << "  " << AMARILLO << "[8]" << RESET << " Visualizar estructura jerarquica del Arbol (Recursion)\n";
+        std::cout << "  " << AMARILLO << "[7]" << RESET << " Imprimir comprobante oficial de turno\n";
+        std::cout << "  " << AMARILLO << "[8]" << RESET << " Visualizar esquema de turnos en arbol\n";
         std::cout << "  " << ROJO << "[0]" << RESET << " Volver al menu principal\n";
         std::cout << CIAN << "----------------------------------------------------------------------------------------\n" << RESET;
         opc = leerEntero("Seleccione una opcion [0-8]: ", 0, 8);
@@ -440,25 +608,23 @@ void InterfazUI::menuTurnos() {
 void InterfazUI::vistaAsignarTurno() {
     imprimirBanner("ASIGNACION DE NUEVO TURNO");
 
-    std::cout << BLANCO << NEGRITA << "Medicos activos disponibles:\n" << RESET;
-    for (const auto& m : servicio.getMedicos()) {
-        if (m.isActivo()) {
-            std::cout << "  ID [" << m.getId() << "] Dr/a. " << m.getApellido() << " (" << m.getEspecialidad() << ")\n";
-        }
-    }
+    // Mostramos las tablas de medicos y pacientes activos disponibles
+    mostrarTablaMedicos("1. MEDICOS ACTIVOS DISPONIBLES", true);
     std::cout << "\n";
+    mostrarTablaPacientes("2. PACIENTES ACTIVOS DISPONIBLES", true);
+    std::cout << "\n" << BLANCO << NEGRITA << "Complete los datos del turno a continuacion:\n" << RESET;
 
-    int idMed = leerEntero("Ingrese ID del Medico: ", 1, 99999);
-    int idPac = leerEntero("Ingrese ID del Paciente: ", 1, 99999);
-    std::string fecha = leerFecha("Fecha del turno");
-    std::string hora = leerHora("Hora del turno");
-    std::string motivo = leerTextoNoVacio("Motivo de consulta: ");
+    int idMed = leerEntero("  -> Ingrese ID del Medico: ", 1, 99999);
+    int idPac = leerEntero("  -> Ingrese ID del Paciente: ", 1, 99999);
+    std::string fecha = leerFecha("  -> Fecha del turno");
+    std::string hora = leerHora("  -> Hora del turno");
+    std::string motivo = leerTextoNoVacio("  -> Motivo de consulta: ");
 
     try {
         int idGenerado = servicio.asignarTurno(idMed, idPac, fecha, hora, motivo);
         std::cout << "\n" << VERDE << "[OK] Turno #" << idGenerado << " registrado exitosamente!" << RESET << "\n";
 
-        if (confirmarAccion("Desea ver o imprimir el comprobante oficial en este momento?")) {
+        if (confirmarAccion("\nDesea ver o imprimir el comprobante oficial en este momento?")) {
             servicio.imprimirTicket(idGenerado);
         }
     } catch (const ClinicaException& e) {
@@ -470,18 +636,29 @@ void InterfazUI::vistaAsignarTurno() {
 
 void InterfazUI::vistaCancelarTurno() {
     imprimirBanner("CANCELACION DE TURNO");
-    int idTurno = leerEntero("Ingrese ID del turno a cancelar: ", 1, 99999);
+    mostrarTablaTurnos("HISTORIAL DE TURNOS REGISTRADOS");
+
+    int idTurno = leerEntero("\nIngrese ID del turno a cancelar: ", 1, 99999);
 
     Turno* t = servicio.buscarTurnoPorId(idTurno);
     if (!t) {
-        std::cout << "\n" << ROJO << "[ERROR] Turno no encontrado." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun turno con el ID " << idTurno << "." << RESET << "\n";
         pausar();
         return;
     }
 
-    std::cout << "\nDatos del turno:\n" << *t << "\n";
+    std::cout << "\nDatos del turno seleccionado:\n" << *t << "\n";
 
-    if (confirmarAccion("Esta seguro que desea cancelar este turno?")) {
+    // Comprobacion explicita si ya esta cancelado
+    if (t->getEstado() == "CANCELADO") {
+        std::cout << "\n" << AMARILLO << NEGRITA 
+                  << "[!] AVISO: El turno #" << idTurno << " YA SE ENCUENTRA CANCELADO." << RESET << "\n";
+        std::cout << "    No es posible cancelarlo nuevamente.\n";
+        pausar();
+        return;
+    }
+
+    if (confirmarAccion("\nEsta seguro que desea cancelar este turno?")) {
         try {
             servicio.cancelarTurno(idTurno);
             std::cout << "\n" << VERDE << "[OK] El turno ha sido cancelado exitosamente." << RESET << "\n";
@@ -489,7 +666,7 @@ void InterfazUI::vistaCancelarTurno() {
             std::cout << "\n" << ROJO << "[ERROR] " << e.what() << RESET << "\n";
         }
     } else {
-        std::cout << "\nOperacion cancelada.\n";
+        std::cout << "\nOperacion cancelada por el usuario.\n";
     }
 
     pausar();
@@ -497,16 +674,25 @@ void InterfazUI::vistaCancelarTurno() {
 
 void InterfazUI::vistaReprogramarTurno() {
     imprimirBanner("REPROGRAMACION DE TURNO");
-    int idTurno = leerEntero("Ingrese ID del turno a reprogramar: ", 1, 99999);
+    mostrarTablaTurnos("HISTORIAL DE TURNOS REGISTRADOS");
+
+    int idTurno = leerEntero("\nIngrese ID del turno a reprogramar: ", 1, 99999);
 
     Turno* t = servicio.buscarTurnoPorId(idTurno);
     if (!t) {
-        std::cout << "\n" << ROJO << "[ERROR] Turno no encontrado." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun turno con el ID " << idTurno << "." << RESET << "\n";
         pausar();
         return;
     }
 
-    std::cout << "\nTurno actual:\n" << *t << "\n\n";
+    std::cout << "\nTurno seleccionado:\n" << *t << "\n\n";
+
+    if (t->getEstado() == "CANCELADO") {
+        std::cout << AMARILLO << "[!] AVISO: No es posible reprogramar un turno cancelado. Asigne un nuevo turno desde el menu.\n" << RESET;
+        pausar();
+        return;
+    }
+
     std::cout << "Ingrese la nueva fecha y hora deseadas:\n";
     std::string nuevaFecha = leerFecha("Nueva fecha");
     std::string nuevaHora = leerHora("Nueva hora");
@@ -524,17 +710,19 @@ void InterfazUI::vistaReprogramarTurno() {
 
 void InterfazUI::vistaCambiarEstadoTurno() {
     imprimirBanner("CAMBIO DE ESTADO DE TURNO");
-    int idTurno = leerEntero("Ingrese ID del turno: ", 1, 99999);
+    mostrarTablaTurnos("HISTORIAL DE TURNOS REGISTRADOS");
+
+    int idTurno = leerEntero("\nIngrese ID del turno: ", 1, 99999);
 
     Turno* t = servicio.buscarTurnoPorId(idTurno);
     if (!t) {
-        std::cout << "\n" << ROJO << "[ERROR] Turno no encontrado." << RESET << "\n";
+        std::cout << "\n" << ROJO << "[ERROR] No existe ningun turno con el ID " << idTurno << "." << RESET << "\n";
         pausar();
         return;
     }
 
     std::cout << "\nTurno actual:\n" << *t << "\n\n";
-    std::cout << "Seleccione nuevo estado:\n";
+    std::cout << "Seleccione el nuevo estado:\n";
     std::cout << "  [1] PENDIENTE\n";
     std::cout << "  [2] ATENDIDO\n";
     std::cout << "  [3] CANCELADO\n";
@@ -553,51 +741,16 @@ void InterfazUI::vistaCambiarEstadoTurno() {
 }
 
 void InterfazUI::vistaListarTurnos() {
-    imprimirBanner("LISTADO CRONOLOGICO DE TURNOS (RECORRIDO INORDEN RECURSIVO)");
-    auto lista = servicio.obtenerTurnosCronologicos();
-
-    if (lista.empty()) {
-        std::cout << "No hay turnos registrados en la clinica.\n";
-    } else {
-        std::cout << BLANCO << NEGRITA << std::left 
-                  << std::setw(6)  << "ID" 
-                  << std::setw(12) << "Fecha" 
-                  << std::setw(8)  << "Hora" 
-                  << std::setw(24) << "Medico" 
-                  << std::setw(24) << "Paciente" 
-                  << std::setw(14) << "Estado" 
-                  << "Motivo" << RESET << "\n";
-        std::cout << CIAN << std::string(98, '-') << RESET << "\n";
-
-        for (const auto& t : lista) {
-            Medico* m = servicio.buscarMedicoPorId(t.getIdMedico());
-            Paciente* p = servicio.buscarPacientePorId(t.getIdPaciente());
-
-            std::string nombreMed = (m ? "Dr. " + m->getApellido() : "ID " + std::to_string(t.getIdMedico()));
-            std::string nombrePac = (p ? p->getApellido() + ", " + p->getNombre() : "ID " + std::to_string(t.getIdPaciente()));
-
-            std::string colorEst = RESET;
-            if (t.getEstado() == "PENDIENTE") colorEst = AMARILLO;
-            else if (t.getEstado() == "ATENDIDO") colorEst = VERDE;
-            else if (t.getEstado() == "CANCELADO") colorEst = ROJO;
-
-            std::cout << std::left 
-                      << std::setw(6)  << t.getIdTurno() 
-                      << std::setw(12) << t.getFecha() 
-                      << std::setw(8)  << t.getHora() 
-                      << std::setw(24) << (nombreMed.length() > 22 ? nombreMed.substr(0, 21) + "." : nombreMed)
-                      << std::setw(24) << (nombrePac.length() > 22 ? nombrePac.substr(0, 21) + "." : nombrePac)
-                      << colorEst << std::setw(14) << t.getEstado() << RESET
-                      << t.getMotivo() << "\n";
-        }
-    }
-
+    imprimirBanner("LISTADO CRONOLOGICO DE TURNOS");
+    mostrarTablaTurnos("AGENDA CRONOLOGICA COMPLETA");
     pausar();
 }
 
 void InterfazUI::vistaBuscarTurno() {
     imprimirBanner("CONSULTA DE TURNO POR ID");
-    int idTurno = leerEntero("Ingrese ID de Turno: ", 1, 99999);
+    mostrarTablaTurnos("HISTORIAL DISPONIBLE");
+
+    int idTurno = leerEntero("\nIngrese ID de Turno: ", 1, 99999);
 
     Turno* t = servicio.buscarTurnoPorId(idTurno);
     if (t) {
@@ -617,7 +770,9 @@ void InterfazUI::vistaBuscarTurno() {
 
 void InterfazUI::vistaImprimirComprobante() {
     imprimirBanner("IMPRESION DE COMPROBANTE OFICIAL");
-    int idTurno = leerEntero("Ingrese ID de Turno: ", 1, 99999);
+    mostrarTablaTurnos("HISTORIAL DE TURNOS REGISTRADOS");
+
+    int idTurno = leerEntero("\nIngrese ID de Turno: ", 1, 99999);
 
     try {
         servicio.imprimirTicket(idTurno);
@@ -629,8 +784,8 @@ void InterfazUI::vistaImprimirComprobante() {
 }
 
 void InterfazUI::vistaVisualizarArbol() {
-    imprimirBanner("ESTRUCTURA JERARQUICA DEL ARBOL ABB (RECURSION VISUAL)");
-    std::cout << "Visualizacion de los nodos del Arbol Binario de Busqueda generados por fecha y hora:\n";
+    imprimirBanner("ESQUEMA DE TURNOS EN ARBOL");
+    std::cout << "Visualizacion de los nodos del Arbol Binario generados por fecha y hora:\n";
     std::cout << GRIS << "(Ramas derechas hacia arriba/derecha, ramas izquierdas hacia abajo/izquierda)\n\n" << RESET;
 
     servicio.mostrarEstructuraArbol();
@@ -674,7 +829,7 @@ void InterfazUI::vistaReportePorFecha() {
     buffer << "Turnos programados para el dia " << fecha << ":\n\n";
 
     if (lista.empty()) {
-        std::cout << "No hay turnos registrados en esa fecha.\n";
+        std::cout << "\nNo hay turnos registrados en la fecha " << fecha << ".\n";
     } else {
         for (const auto& t : lista) {
             Medico* m = servicio.buscarMedicoPorId(t.getIdMedico());
@@ -699,7 +854,9 @@ void InterfazUI::vistaReportePorFecha() {
 
 void InterfazUI::vistaReportePorMedico() {
     imprimirBanner("REPORTE DE TURNOS POR MEDICO");
-    int idMed = leerEntero("Ingrese ID del Medico: ", 1, 99999);
+    mostrarTablaMedicos("HISTORIAL DE MEDICOS REGISTRADOS");
+
+    int idMed = leerEntero("\nIngrese ID del Medico: ", 1, 99999);
 
     Medico* m = servicio.buscarMedicoPorId(idMed);
     if (!m) {
@@ -714,7 +871,7 @@ void InterfazUI::vistaReportePorMedico() {
 
     auto lista = servicio.filtrarTurnosPorMedico(idMed);
     if (lista.empty()) {
-        std::cout << "El profesional no tiene turnos registrados.\n";
+        std::cout << "\nEl profesional no tiene turnos registrados.\n";
     } else {
         for (const auto& t : lista) {
             Paciente* p = servicio.buscarPacientePorId(t.getIdPaciente());
@@ -738,7 +895,9 @@ void InterfazUI::vistaReportePorMedico() {
 
 void InterfazUI::vistaReportePorPaciente() {
     imprimirBanner("HISTORIAL DE TURNOS POR PACIENTE");
-    int idPac = leerEntero("Ingrese ID del Paciente: ", 1, 99999);
+    mostrarTablaPacientes("HISTORIAL DE PACIENTES REGISTRADOS");
+
+    int idPac = leerEntero("\nIngrese ID del Paciente: ", 1, 99999);
 
     Paciente* p = servicio.buscarPacientePorId(idPac);
     if (!p) {
@@ -753,7 +912,7 @@ void InterfazUI::vistaReportePorPaciente() {
 
     auto lista = servicio.filtrarTurnosPorPaciente(idPac);
     if (lista.empty()) {
-        std::cout << "El paciente no tiene turnos registrados.\n";
+        std::cout << "\nEl paciente no tiene turnos registrados.\n";
     } else {
         for (const auto& t : lista) {
             Medico* m = servicio.buscarMedicoPorId(t.getIdMedico());
