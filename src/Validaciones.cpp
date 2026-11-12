@@ -64,6 +64,137 @@ std::string leerTextoNoVacio(const std::string& mensaje) {
     }
 }
 
+bool esNombreValido(const std::string& texto) {
+    if (texto.empty()) return false;
+    int letras = 0;
+    for (size_t i = 0; i < texto.length(); ++i) {
+        unsigned char c = static_cast<unsigned char>(texto[i]);
+        if (std::isdigit(c)) {
+            return false; // Estrictamente sin numeros
+        }
+        if (std::isalpha(c) || c >= 128) {
+            letras++;
+        } else if (c == ' ' || c == '\'' || c == '-' || c == '.') {
+            // Permitido para apellidos compuestos, abreviaturas o guiones
+            continue;
+        } else {
+            return false; // Simbolos especiales no permitidos
+        }
+    }
+    return (letras >= 2);
+}
+
+bool esEspecialidadValida(const std::string& texto) {
+    if (texto.empty()) return false;
+    int letras = 0;
+    for (size_t i = 0; i < texto.length(); ++i) {
+        unsigned char c = static_cast<unsigned char>(texto[i]);
+        if (std::isdigit(c)) {
+            return false; // Una especialidad medica no lleva numeros
+        }
+        if (std::isalpha(c) || c >= 128) {
+            letras++;
+        } else if (c == ' ' || c == '-' || c == '/' || c == '.') {
+            continue;
+        } else {
+            return false;
+        }
+    }
+    return (letras >= 3);
+}
+
+bool tieneLetras(const std::string& texto, int minLetras) {
+    int letras = 0;
+    for (size_t i = 0; i < texto.length(); ++i) {
+        unsigned char c = static_cast<unsigned char>(texto[i]);
+        if (std::isalpha(c) || c >= 128) {
+            letras++;
+        }
+    }
+    return (letras >= minLetras);
+}
+
+std::string leerNombreOApellido(const std::string& mensaje, bool permitirCancelar) {
+    while (true) {
+        std::string texto = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && texto == "0") {
+            return "0";
+        }
+
+        if (esNombreValido(texto)) {
+            return texto;
+        }
+
+        std::cout << " [!] Entrada invalida. El nombre o apellido solo puede contener letras (minimo 2 letras, sin numeros ni simbolos)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
+    }
+}
+
+std::string leerEspecialidad(const std::string& mensaje, bool permitirCancelar) {
+    while (true) {
+        std::string texto = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && texto == "0") {
+            return "0";
+        }
+
+        if (esEspecialidadValida(texto)) {
+            return texto;
+        }
+
+        std::cout << " [!] Especialidad invalida. Debe ser un texto descriptivo sin numeros (ej: Cardiologia, Pediatria)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
+    }
+}
+
+std::string leerObraSocial(const std::string& mensaje, bool permitirCancelar) {
+    while (true) {
+        std::string texto = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && texto == "0") {
+            return "0";
+        }
+
+        if (tieneLetras(texto, 2)) {
+            return texto;
+        }
+
+        std::cout << " [!] Obra Social invalida. Debe contener el nombre de la institucion (ej: OSDE, Swiss Medical, PAMI o Particular, no solo numeros)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
+    }
+}
+
+std::string leerNumeroAfiliado(const std::string& mensaje, bool permitirCancelar) {
+    while (true) {
+        std::string texto = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && texto == "0") {
+            return "0";
+        }
+
+        // Se acepta 'S/N' o credenciales alfanumericas (ej: 210-987654-1, 15098745632)
+        if (texto.length() >= 2 && texto.length() <= 25) {
+            return texto;
+        }
+
+        std::cout << " [!] Numero de afiliado invalido. Ingrese el numero de credencial (minimo 2 caracteres) o 'S/N' si es particular"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
+    }
+}
+
+std::string leerMotivoConsulta(const std::string& mensaje, bool permitirCancelar) {
+    while (true) {
+        std::string texto = leerTextoNoVacio(mensaje);
+        if (permitirCancelar && texto == "0") {
+            return "0";
+        }
+
+        if (tieneLetras(texto, 3)) {
+            return texto;
+        }
+
+        std::cout << " [!] Motivo invalido. Debe describir la consulta medica con texto (ej: Chequeo general, Dolor agudo, no solo numeros)"
+                  << (permitirCancelar ? " o 0 para cancelar" : "") << ".\n";
+    }
+}
+
 std::string leerDNI(const std::string& mensaje, bool permitirCancelar) {
     while (true) {
         std::string dni = leerTextoNoVacio(mensaje);

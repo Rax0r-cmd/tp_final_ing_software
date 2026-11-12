@@ -13,6 +13,26 @@ namespace Validaciones {
     // Lee un texto que no puede quedar vacio ni tener solo espacios
     std::string leerTextoNoVacio(const std::string& mensaje);
 
+    // Lee un nombre o apellido valido (solo letras, espacios, apostrofes o guiones, sin numeros ni simbolos, minimo 2 letras)
+    std::string leerNombreOApellido(const std::string& mensaje, bool permitirCancelar = false);
+
+    // Lee una especialidad medica valida (solo letras, espacios, guiones o barras, sin numeros, minimo 3 letras)
+    std::string leerEspecialidad(const std::string& mensaje, bool permitirCancelar = false);
+
+    // Lee una obra social o prepaga valida (debe contener texto con letras, ej: OSDE, PAMI, Particular, OSDE 210)
+    std::string leerObraSocial(const std::string& mensaje, bool permitirCancelar = false);
+
+    // Lee un numero de afiliado valido o 'S/N' para particulares
+    std::string leerNumeroAfiliado(const std::string& mensaje, bool permitirCancelar = false);
+
+    // Lee un motivo de consulta medica valido (debe contener texto descriptivo con letras, no solo numeros)
+    std::string leerMotivoConsulta(const std::string& mensaje, bool permitirCancelar = false);
+
+    // Validadores auxiliares de texto
+    bool esNombreValido(const std::string& texto);
+    bool esEspecialidadValida(const std::string& texto);
+    bool tieneLetras(const std::string& texto, int minLetras = 2);
+
     // Lee un DNI valido (solo digitos, entre 7 y 8 numeros). Si permitirCancelar es true, '0' cancela.
     std::string leerDNI(const std::string& mensaje, bool permitirCancelar = false);
 
